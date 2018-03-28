@@ -1,13 +1,18 @@
 
 # coding: utf-8
 
-# In[28]:
+# In[21]:
 
 
 import librosa 
 import librosa.display
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import os.path
+import sys
+from subprocess import call
+from pydub import AudioSegment
 
 def compute_melgram(audio_path):
     
@@ -30,7 +35,7 @@ def compute_melgram(audio_path):
         src = np.hstack((src, np.zeros((int(DURA*SR) - n_sample,))))
     
     if n_sample > n_sample_fit: #too long, resize to length=DURA*SR in the middle of sample
-        src = src[(n_sample-n_sample_fit)/2:(n_sample+n_sample_fit)/2]
+        src = src[int((n_sample-n_sample_fit)/2):int((n_sample+n_sample_fit)/2)]
     
     
     melgram = librosa.feature.melspectrogram(y=src, sr=SR, hop_length=HOP_LEN, 
@@ -38,22 +43,33 @@ def compute_melgram(audio_path):
     
     ret = librosa.power_to_db(melgram, ref=np.max)
     ret = ret[np.newaxis, np.newaxis, :]
-    return ret
-    
-#     print ret.shape
-#     plt.figure(figsize=(10,4))
-#     librosa.display.specshow(librosa.power_to_db(melgram, ref=np.max),
-#                              y_axis='mel', fmax=8000,
-#                              x_axis='time')
-#     plt.colorbar(format='%+2.0f dB')
-#     plt.title('Mel Spectrogram')
-#     plt.tight_layout()
-#     plt.show()
+        
+    print(ret.shape)
+    plt.figure(figsize=(10,4))
+    librosa.display.specshow(librosa.power_to_db(melgram, ref=np.max),
+                             y_axis='mel', fmax=8000,
+                             x_axis='time')
+    plt.colorbar(format='%+2.0f dB')
+    plt.title(audio_path)
+    plt.tight_layout()
+    plt.show()
 
-    
-    
-compute_melgram(librosa.util.example_audio_file())
-    
+    return ret
+
+path = ".\songs"
+
+
+for filename in os.listdir(path):
+    if filename.endswith('.mp3'):
+        sound = AudioSegment.from_mp3(os.path.join(path, filename))
+        newPath = os.path.normpath(os.path.join(path, filename[:-4]) + '.wav')
+        print(newPath)
+        sound.export(newPath, format='wav')
+
+path = ".\songs"
+for filename in os.listdir(path):
+    if filename.endswith('.wav'):
+        compute_melgram(os.path.join(path, filename))
 
 
 # In[20]:
